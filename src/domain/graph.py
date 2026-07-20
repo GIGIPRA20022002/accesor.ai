@@ -5,8 +5,9 @@ from typing import Annotated
 from langgraph.graph.message import add_messages
 from langgraph.checkpoint.memory import MemorySaver
 
+
 class State(TypedDict):
-    messages : Annotated[list,add_messages]
+    messages: Annotated[list, add_messages]
 
 
 def crear_nodo(generador: Generador):

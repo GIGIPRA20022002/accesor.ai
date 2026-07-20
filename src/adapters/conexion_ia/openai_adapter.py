@@ -21,18 +21,16 @@ class OpenAIAdapter(Generador):
             mensaje_openai.append({"role": role, "content": msg.content})
 
         ##Insertar el mensaje del rol del sistema al inicio de la lista de mensajes
-        rol_system = {"role": "system",
-                      "content": "Eres un asistente de atención al cliente amable y conciso."}
+        rol_system = {
+            "role": "system",
+            "content": "Eres un asistente de atención al cliente amable y conciso.",
+        }
         mensaje_openai.insert(0, rol_system)
-     
 
         respuesta = self.client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=mensaje_openai
+            model="gpt-4o-mini", messages=mensaje_openai
         )
         return respuesta.choices[0].message.content
-
-
 
 
 if __name__ == "__main__":
