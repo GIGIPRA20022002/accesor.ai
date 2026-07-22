@@ -51,9 +51,10 @@ class AgendadorCitasMCPAdapter(AgendadorCitas):
                 ##6.Retornar resultado
                 datos_estructurados = result.structuredContent
 
-                booleano_real = datos_estructurados['result'][0]
-                string_limpio  = datos_estructurados['result'][1]
-                return (booleano_real,string_limpio)
+                booleano_real = datos_estructurados["result"][0]
+                string_limpio = datos_estructurados["result"][1]
+                return (booleano_real, string_limpio)
+
 
 if __name__ == "__main__":
     adaptador = AgendadorCitasMCPAdapter()
