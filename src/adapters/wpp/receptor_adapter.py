@@ -1,15 +1,24 @@
-from src.use_cases.procesar_mensaje_entrante import ProcesarMensajeEntrante
-from fastapi import FastAPI, Query, HTTPException, Request, Depends
+from fastapi import FastAPI, Query, HTTPException, Request
 from fastapi.responses import PlainTextResponse
 from dotenv import load_dotenv
 import os
+from contextlib import asynccontextmanager
+from src.domain.graph import crear_grafo
+from src.adapters.wpp.enviador_adapter import WppEnviadorAdapter
+from src.use_cases.procesar_mensaje_entrante import ProcesarMensajeEntrante
 
 load_dotenv()
-app = FastAPI()
 
 
-def get_procesador():
-    raise RuntimeError("Debe ser sobrescrito en main.py")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    grafo = await crear_grafo()
+    enviador = WppEnviadorAdapter()
+    app.state.caso_uso = ProcesarMensajeEntrante(grafo, enviador)
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/conector")
@@ -25,10 +34,9 @@ async def verificar_token(
 
 
 @app.post("/conector")
-async def recibir_mensaje(
-    request: Request, caso_uso: ProcesarMensajeEntrante = Depends(get_procesador)
-):
+async def recibir_mensaje(request: Request):
     data = await request.json()
+    caso_uso = request.app.state.caso_uso
     ##print("Datos recibidos:", data)
     # Aca se decide que hacer con el mensaje entrante, se delega al caso de uso
     entry = data.get("entry", [])
@@ -44,9 +52,9 @@ async def recibir_mensaje(
     if "messages" in value:
         mensaje = value["messages"][0]
         body = mensaje.get("text", {}).get("body")
-        enviador = mensaje.get("from")
+        numero = mensaje.get("from")
         # delegar al caso de uso
-        await caso_uso.ejecutar(body, enviador)
+        await caso_uso.ejecutar(body, numero)
         return {"status": "ok"}
 
     if "statuses" in value:
