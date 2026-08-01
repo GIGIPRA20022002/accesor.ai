@@ -6,16 +6,22 @@ from contextlib import asynccontextmanager
 from src.domain.graph import crear_grafo
 from src.adapters.wpp.enviador_adapter import WppEnviadorAdapter
 from src.use_cases.procesar_mensaje_entrante import ProcesarMensajeEntrante
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
 load_dotenv()
+db = os.getenv("DATABASE_URL")
+
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    grafo = await crear_grafo()
-    enviador = WppEnviadorAdapter()
-    app.state.caso_uso = ProcesarMensajeEntrante(grafo, enviador)
-    yield
+    async with AsyncPostgresSaver.from_conn_string(db) as checkpointer:
+        await checkpointer.setup()
+        grafo = await crear_grafo(checkpointer)
+        enviador = WppEnviadorAdapter()
+        app.state.caso_uso = ProcesarMensajeEntrante(grafo, enviador)
+        yield
+        
 
 
 app = FastAPI(lifespan=lifespan)

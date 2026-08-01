@@ -1,6 +1,12 @@
 from mcp.server.fastmcp import FastMCP
 from datetime import datetime
 from typing import Optional
+import os
+import psycopg
+from dotenv import load_dotenv
+
+load_dotenv()
+db = os.getenv("DATABASE_URL")
 
 ##Crear el servivor FastMCP
 mcp = FastMCP("CitasServer")
@@ -8,7 +14,7 @@ mcp = FastMCP("CitasServer")
 
 ##Declarar una tool
 @mcp.tool()
-def agendar_cita(
+async def agendar_cita(
     fecha_hora: str,
     cliente: str,
     servicio: Optional[str] = None,
@@ -27,6 +33,13 @@ def agendar_cita(
 
     try:
         fecha_dt = datetime.fromisoformat(fecha_hora)
+        async with await psycopg.AsyncConnection.connect(db) as conn :
+            async with conn.cursor() as cur : 
+                await cur.execute(
+                    "INSERT INTO citas( negocio_id,cliente_numero,fecha_hora,servicio,descripcion)Values(%s,%s,%s,%s,%s)",
+                    ("negocio_demo",cliente,fecha_dt,servicio,nota_adicional)#TODO : negocio_id real cuando haya multi_negocio
+                )
+            await conn.commit()
         return (
             True,
             f"Cita agendada para {cliente} el {fecha_dt} (servicio={servicio}, nota={nota_adicional})",
