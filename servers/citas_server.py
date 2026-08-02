@@ -48,5 +48,42 @@ async def agendar_cita(
         return False, f"Error al agendar cita: {e}"
 
 
+
+@mcp.tool()
+async def consultar_citas(cliente: str) -> tuple[bool, str]:
+    """Consulta las citas activas (pendientes o confirmadas) de un cliente.
+    Usar cuando el cliente pregunte por sus citas, por ejemplo:
+    "¿cuándo es mi cita?", "¿tengo alguna cita agendada?".
+
+    Args:
+        cliente: identificador del cliente (número de WhatsApp)
+    """
+
+    try:
+        async with await psycopg.AsyncConnection.connect(db) as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(
+                    "SELECT fecha_hora, servicio, estado "
+                    "FROM citas WHERE cliente_numero = %s AND estado IN ('pendiente','confirmada') ORDER BY fecha_hora",
+                    (cliente,)
+                )
+
+                filas = await cur.fetchall()
+                if not filas:
+                    return True, "No se encontraron citas"
+
+                texto = "Tus citas\n"
+                for fecha_hora, servicio, estado in filas:
+                    texto += f"-{fecha_hora} - {servicio} ({estado})\n"
+
+                return True, texto
+
+    except Exception as e:
+        return False, f"error al consultar citas {e}"
+
+
+
+
+
 if __name__ == "__main__":
     mcp.run()
