@@ -1,4 +1,3 @@
-
 from langchain_openai import ChatOpenAI
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain.agents import create_agent
@@ -17,9 +16,6 @@ async def crear_grafo(checkpointer):
         }
     )
     tools = await client.get_tools()
-    
+
     agent = create_agent(modelo, tools, checkpointer=checkpointer)
     return agent
-
-
-

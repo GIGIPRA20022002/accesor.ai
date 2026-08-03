@@ -12,7 +12,6 @@ load_dotenv()
 db = os.getenv("DATABASE_URL")
 
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     async with AsyncPostgresSaver.from_conn_string(db) as checkpointer:
@@ -21,7 +20,6 @@ async def lifespan(app: FastAPI):
         enviador = WppEnviadorAdapter()
         app.state.caso_uso = ProcesarMensajeEntrante(grafo, enviador)
         yield
-        
 
 
 app = FastAPI(lifespan=lifespan)
