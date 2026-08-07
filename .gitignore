@@ -7,3 +7,4 @@ test_cita.py
 test_consulta.py
 test_disponibilidad.py
 test_disponible.py
+test_servicios.py

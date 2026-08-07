@@ -155,5 +155,36 @@ async def consultar_disponibilidad(fecha: str) -> tuple[bool, str]:
         return False, f"Error consultando disponibilidad {e}"
 
 
+@mcp.tool()
+async def consultar_servicios() -> tuple[bool, str]:
+    """
+    Consulta los servicios activos del negocio 'negocio_demo' y devuelve
+    un texto con nombre, precio y duración ordenados por precio.
+
+    Returns:
+        tuple[bool, str]:
+            - True y el listado formateado, o mensaje si no hay servicios.
+            - False y el error si la consulta falla.
+    """
+    try:
+        async with await psycopg.AsyncConnection.connect(db) as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(
+                    "SELECT nombre , precio ,duracion FROM servicios "
+                    "WHERE negocio_id = 'negocio_demo' AND activo = TRUE "
+                    "ORDER BY precio "
+                )
+                filas = await cur.fetchall()
+                if not filas:
+                    return True, "No hay servicios disponibles por el momento"
+                texto = "Servicios disponibles \n "
+                for nombre, precio, duracion in filas:
+                    texto += f"-{nombre}  ${precio:,} {duracion}min\n"
+                return True, texto
+
+    except Exception as e:
+        return False, f"Error consultando servicios: {e}"
+
+
 if __name__ == "__main__":
     mcp.run()
